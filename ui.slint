@@ -1,0 +1,236 @@
+// ZenAudio UI 定义
+// 使用 Slint 构建简洁美观的音乐播放器界面
+
+export component MainWindow inherits Window {
+    width: 800px;
+    height: 600px;
+    title: "Zenaudio";
+
+    // 状态属性 - 与 Rust 逻辑双向绑定
+    in-out property<string> song_title: "未播放";
+    in-out property<string> artist_name: "";
+    in-out property<bool> is_playing: false;
+    in-out property<float> progress: 0.0;      // 0.0 - 1.0
+    in-out property<string> progress_text: "0:00 / 0:00";
+    in-out property<float> volume: 0.8;        // 0.0 - 1.0
+    in-out property<bool> has_file: false;
+    
+    // 专辑封面（使用 Image 类型）
+    in-out property<image> album_art: @image-path("cover-placeholder.png");
+
+    // 播放列表数据模型
+    playlist_data := [
+        { title: "示例歌曲 1", artist: "艺术家 A", duration: "3:45" },
+        { title: "示例歌曲 2", artist: "艺术家 B", duration: "4:20" },
+        { title: "示例歌曲 3", artist: "艺术家 C", duration: "2:58" },
+    ];
+
+    VerticalLayout {
+        spacing: 10px;
+        padding: 20px;
+
+        // 顶部区域：专辑封面和歌曲信息
+        Rectangle {
+            background: #2a2a2a;
+            border-radius: 10px;
+            preferred-height: 200px;
+
+            HorizontalLayout {
+                spacing: 20px;
+                padding: 20px;
+                align-items: center;
+
+                // 专辑封面
+                Image {
+                    source: album_art;
+                    preferred-width: 160px;
+                    preferred-height: 160px;
+                    border-radius: 8px;
+                    image-fit: cover;
+                }
+
+                // 歌曲信息
+                VerticalLayout {
+                    spacing: 10px;
+                    align-items: start;
+
+                    Text {
+                        text: song_title;
+                        font-size: 24px;
+                        font-weight: bold;
+                        color: #ffffff;
+                        wrap: wrap;
+                    }
+
+                    Text {
+                        text: artist_name;
+                        font-size: 16px;
+                        color: #aaaaaa;
+                    }
+
+                    // 进度条
+                    VerticalLayout {
+                        spacing: 5px;
+
+                        Slider {
+                            min-value: 0.0;
+                            max-value: 1.0;
+                            value: progress;
+                            enabled: has_file;
+                            on-changed(progress) => {
+                                // Rust 代码中将处理 seek 操作
+                            }
+                            preferred-width: 400px;
+                        }
+
+                        Text {
+                            text: progress_text;
+                            font-size: 12px;
+                            color: #888888;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 控制按钮区域
+        Rectangle {
+            background: #333333;
+            border-radius: 10px;
+            preferred-height: 80px;
+
+            HorizontalLayout {
+                spacing: 20px;
+                padding: 20px;
+                align-items: center;
+                horizontal-alignment: center;
+
+                // 上一曲按钮
+                Button {
+                    text: "⏮";
+                    font-size: 24px;
+                    preferred-width: 60px;
+                    preferred-height: 60px;
+                    border-radius: 30px;
+                    background: #444444;
+                    color: #ffffff;
+                }
+
+                // 播放/暂停按钮
+                Button {
+                    text: is_playing ? "⏸" : "▶";
+                    font-size: 32px;
+                    preferred-width: 80px;
+                    preferred-height: 80px;
+                    border-radius: 40px;
+                    background: #1db954;
+                    color: #ffffff;
+                    
+                    clicked => {
+                        if (is_playing) {
+                            pause();
+                        } else {
+                            play();
+                        }
+                    }
+                }
+
+                // 停止按钮
+                Button {
+                    text: "⏹";
+                    font-size: 24px;
+                    preferred-width: 60px;
+                    preferred-height: 60px;
+                    border-radius: 30px;
+                    background: #444444;
+                    color: #ffffff;
+                    
+                    clicked => {
+                        stop();
+                    }
+                }
+
+                // 音量控制
+                HorizontalLayout {
+                    spacing: 10px;
+                    align-items: center;
+
+                    Text {
+                        text: "🔊";
+                        font-size: 20px;
+                        color: #ffffff;
+                    }
+
+                    Slider {
+                        min-value: 0.0;
+                        max-value: 1.0;
+                        value: volume;
+                        preferred-width: 150px;
+                        
+                        on-changed(volume) => {
+                            // Rust 代码中将处理音量设置
+                        }
+                    }
+                }
+            }
+        }
+
+        // 播放列表区域
+        Rectangle {
+            background: #2a2a2a;
+            border-radius: 10px;
+            
+            VerticalLayout {
+                padding: 15px;
+                spacing: 10px;
+
+                Text {
+                    text: "播放列表";
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #ffffff;
+                }
+
+                // 播放列表视图
+                StandardListView {
+                    model: playlist_data;
+                    preferred-height: 200px;
+                    
+                    on-selection-changed(index) => {
+                        // Rust 代码中将处理歌曲选择
+                    }
+                }
+
+                // 添加文件按钮
+                Button {
+                    text: "+ 添加文件";
+                    preferred-width: 150px;
+                    background: #444444;
+                    color: #ffffff;
+                    border-radius: 5px;
+                    
+                    clicked => {
+                        add_file();
+                    }
+                }
+            }
+        }
+    }
+
+    // 回调函数 - 由 Rust 调用
+    callback play();
+    callback pause();
+    callback stop();
+    callback add_file();
+    callback seek(float);
+    callback set_volume(float);
+
+    // 定时器用于更新进度
+    Timer {
+        interval: 100ms;
+        running: is_playing;
+        triggered => {
+            // Rust 代码中将更新进度
+        }
+    }
+}
