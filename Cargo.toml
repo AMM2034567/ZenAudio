@@ -1,0 +1,62 @@
+[package]
+name = "zenaudio"
+version = "0.1.0"
+edition = "2021"
+authors = ["Zenaudio Team"]
+description = "A robust desktop music player with Slint GUI, Symphonia decoding, and Rubato resampling"
+license = "MIT"
+build = "build.rs"
+
+[dependencies]
+# GUI Framework - Slint
+slint = { version = "1.5", features = ["compat-1-2"] }
+
+# Audio Decoding - Symphonia (supports most formats)
+symphonia = { version = "0.5", features = ["all", "opt-simd"] }
+
+# Audio Output - CPAL (Cross-platform audio)
+cpal = "0.15"
+
+# High-quality Resampling - Rubato
+rubato = "0.14"
+
+# Async Runtime - Tokio
+tokio = { version = "1", features = ["full"] }
+
+# Metadata & Album Art - Lofty
+lofty = "0.19"
+
+# Lock-free Ring Buffer - ringbuf
+ringbuf = "0.4"
+
+# Error handling
+anyhow = "1.0"
+
+# For thread-safe sharing
+arc-swap = "1.7"
+
+# Image processing for album art
+image = "0.24"
+
+# Logging
+env_logger = "0.10"
+
+[build-dependencies]
+# Slint 构建时编译器
+slint-build = "1.5"
+
+[profile.release]
+# 开启链接时优化，大幅减小二进制体积并提升性能
+lto = true
+# 单代码生成单元，允许更激进的优化
+codegen-units = 1
+# 剥离调试符号，减小文件大小
+strip = true
+# 最高优化级别
+opt-level = 3
+# panic 时直接 abort，减小二进制体积
+panic = "abort"
+
+[profile.dev]
+# 开发环境下也启用一些优化以保证音频处理的稳定性
+opt-level = 1
